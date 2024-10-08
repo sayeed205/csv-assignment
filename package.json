@@ -26,6 +26,7 @@
     "#providers/*": "./providers/*.js",
     "#policies/*": "./app/policies/*.js",
     "#abilities/*": "./app/abilities/*.js",
+    "#enums/*": "./app/enums/*.js",
     "#database/*": "./database/*.js",
     "#start/*": "./start/*.js",
     "#tests/*": "./tests/*.js",
@@ -56,6 +57,8 @@
     "@adonisjs/cors": "^2.2.1",
     "@adonisjs/lucid": "^21.2.0",
     "@vinejs/vine": "^2.1.0",
+    "csv-parse": "^5.5.6",
+    "http-status-codes": "^2.3.0",
     "luxon": "^3.5.0",
     "pg": "^8.13.0",
     "reflect-metadata": "^0.2.2"
