@@ -36,4 +36,79 @@ export default class CSVController {
       statusCode: StatusCodes.CREATED,
     })
   }
+
+  async show({ params, response }: HttpContext) {
+    const csv = await Csv.find(params.id)
+    if (!csv) {
+      return response.notFound({
+        success: false,
+        message: 'CSV not found!!',
+        responseObject: null,
+        statusCode: StatusCodes.NOT_FOUND,
+      })
+    }
+
+    const products = await csv
+      .related('products')
+      .query()
+      .preload('images', (q) => q.whereNotNull('error'))
+
+    const errors: any[] = []
+
+    for (const product of products) {
+      for (const img of product.images) {
+        errors.push({
+          productName: product.name,
+          serialNumber: product.serialNumber,
+          error: img.error,
+        })
+      }
+    }
+
+    return response.ok({
+      success: true,
+      message: 'CSV Status retrieved.',
+      responseObject: {
+        id: csv.id,
+        status: csv.status,
+        report: {
+          message: csv.error || '',
+          data: errors,
+        },
+      },
+      statusCode: StatusCodes.OK,
+    })
+  }
+
+  async output({ params, response }: HttpContext) {
+    const csv = await Csv.find(params.id)
+    if (!csv) {
+      return response.notFound({
+        success: false,
+        message: 'CSV not found!!',
+        responseObject: null,
+        statusCode: StatusCodes.NOT_FOUND,
+      })
+    }
+    const products = await csv.related('products').query().preload('images')
+
+    const csvHeader = 'Serial Number,Product Name,Input Image Urls,Output Image Urls'
+    let rows = csvHeader + '\n'
+
+    for (const product of products) {
+      const serialNumber = product.serialNumber || ''
+      const productName = product.name || ''
+      const inputImageUrls = product.images.map((im) => im.inputUrl).join(',')
+      const outputImageUrls = product.images.map((im) => im.outputUrl?.toString()).join(',')
+
+      console.log(inputImageUrls, outputImageUrls, product.id, product.serialize().images)
+
+      rows += `${serialNumber},${productName},"${inputImageUrls}","${outputImageUrls}"\n`
+    }
+
+    response.header('Content-Type', 'text/csv')
+    response.header('Content-Disposition', `attachment; filename="csv_output_${csv.id}.csv"`)
+
+    return response.send(rows)
+  }
 }

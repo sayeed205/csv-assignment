@@ -17,4 +17,6 @@ router.get('/', async () => {
   }
 })
 
-router.post('/import', [CSVController, 'import'])
+router.post('/csv/import', [CSVController, 'import'])
+router.get('/csv/:id/status', [CSVController, 'show'])
+router.get('/csv/:id/output', [CSVController, 'output'])

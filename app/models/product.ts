@@ -1,9 +1,10 @@
-import { BaseModel, beforeCreate, belongsTo, column } from '@adonisjs/lucid/orm'
-import type { BelongsTo } from '@adonisjs/lucid/types/relations'
+import { BaseModel, beforeCreate, belongsTo, column, hasMany } from '@adonisjs/lucid/orm'
+import type { BelongsTo, HasMany } from '@adonisjs/lucid/types/relations'
 import { DateTime } from 'luxon'
 import { randomUUID } from 'node:crypto'
 
 import Csv from '#models/csv'
+import Image from '#models/image'
 
 export default class Product extends BaseModel {
   static selfAssignPrimaryKey = true
@@ -12,16 +13,13 @@ export default class Product extends BaseModel {
   declare id: string
 
   @column()
-  declare serialNumber: BigInt
+  declare serialNumber: string
 
   @column()
   declare name: string
 
   @column()
-  declare importUrls: string[]
-
-  @column()
-  declare outputUrls: string[] | null
+  declare urls: string[]
 
   @column()
   declare csvId: string
@@ -39,4 +37,7 @@ export default class Product extends BaseModel {
 
   @belongsTo(() => Csv)
   declare csv: BelongsTo<typeof Csv>
+
+  @hasMany(() => Image)
+  declare images: HasMany<typeof Image>
 }

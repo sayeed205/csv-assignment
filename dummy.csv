@@ -1,6 +1,6 @@
 S. No.,Product Name,Input Image Urls
 1,Product 1,"http://localhost:3333/uploads/products/images/p0h4e5n72ksd1.png,https://dummyimage.com/600x400/fff/000.jpg"
-2,Product 2,"https://dummyimage.com/600x400/ff0000/fff.jpg,https://dummyimage.com/600x400/fff/ff0000.jpg"
+2,Product 2,",https://dummyimage.com/600x400/fff/ff0000.jpg"
 3,Product 3,"https://dummyimage.com/600x400/00ff00/fff.jpg,https://dummyimage.com/600x400/fff/00ff00.jpg"
 4,Product 4,"https://dummyimage.com/600x400/0000ff/fff.jpg,https://dummyimage.com/600x400/fff/0000ff.jpg"
 5,Product 5,"https://dummyimage.com/600x400/ffff00/000.jpg,https://dummyimage.com/600x400/000/ffff00.jpg"
