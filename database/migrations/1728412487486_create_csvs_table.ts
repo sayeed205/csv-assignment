@@ -16,6 +16,7 @@ export default class extends BaseSchema {
         })
         .defaultTo(CsvStatus.PENDING)
         .notNullable()
+      table.text('webhook_url').nullable()
       table.text('error').nullable()
       table.timestamp('processed_at').nullable()
 

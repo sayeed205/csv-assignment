@@ -1,36 +1,32 @@
 import { cuid } from '@adonisjs/core/helpers'
 import type { HttpContext } from '@adonisjs/core/http'
-import { parse } from 'csv-parse/sync'
-import * as fs from 'node:fs'
+import drive from '@adonisjs/drive/services/main'
+import { StatusCodes } from 'http-status-codes'
 
 import { CsvStatus } from '#enums/csv'
+import ProcessCsv from '#jobs/process_csv'
 import Csv from '#models/csv'
 import { csvValidator } from '#validators/csv'
-import { StatusCodes } from 'http-status-codes'
 
 export default class CSVController {
   async import({ request, response }: HttpContext) {
-    const { file } = await request.validateUsing(csvValidator)
+    const { file, webhookUrl } = await request.validateUsing(csvValidator)
 
-    // use adonis-drive s3/file system
-    await file.move('uploads/csv', {
-      name: `${cuid()}.${file.extname}`,
-    })
+    const fileKey = `uploads/csv/${cuid()}.${file.extname}`
+    await file.moveToDisk(fileKey)
+    const fileUrl = await drive.use().getUrl(fileKey)
 
     const csv = await Csv.create({
-      file: file.filePath!,
+      file: fileUrl,
       status: CsvStatus.PENDING,
+      webhookUrl: webhookUrl,
     })
 
-    const data = fs.readFileSync(file.filePath!, 'utf8')
+    await ProcessCsv.enqueue({ id: csv.id })
 
-    const rows = data.toString()
+    // todo)) make separate webhook table and service
 
-    const rowData = parse(rows, {
-      columns: true,
-    })
-
-    return response.json({
+    return response.created({
       success: true,
       message: 'CSV imported successfully',
       responseObject: {

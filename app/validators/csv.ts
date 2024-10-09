@@ -17,9 +17,9 @@ const validateCSV = vine.createRule((value: unknown, _options: unknown, field: F
     field.report('Invalid CSV format', 'csv', field)
   }
 
-  header.every((key) => {
+  header.forEach((key, index) => {
     if (!['S. No.', 'Product Name', 'Input Image Urls'].includes(key)) {
-      field.report('Invalid CSV Column', 'csv', field)
+      field.report(`Invalid CSV Column '${key}' at index ${index}`, 'csv', field)
     }
   })
 })
@@ -31,5 +31,6 @@ export const csvValidator = vine.compile(
         extnames: ['csv'],
       })
       .use(validateCSV({})),
+    webhookUrl: vine.string().url().optional().nullable(),
   })
 )

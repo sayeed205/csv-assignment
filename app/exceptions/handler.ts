@@ -1,5 +1,8 @@
+import { errors as authErrors } from '@adonisjs/auth'
+import { ExceptionHandler, HttpContext } from '@adonisjs/core/http'
 import app from '@adonisjs/core/services/app'
-import { HttpContext, ExceptionHandler } from '@adonisjs/core/http'
+import { errors as vineErrors } from '@vinejs/vine'
+import { StatusCodes } from 'http-status-codes'
 
 export default class HttpExceptionHandler extends ExceptionHandler {
   /**
@@ -13,6 +16,28 @@ export default class HttpExceptionHandler extends ExceptionHandler {
    * response to the client
    */
   async handle(error: unknown, ctx: HttpContext) {
+    if (error instanceof vineErrors.E_VALIDATION_ERROR) {
+      ctx.response.status(422).json({
+        success: false,
+        message: 'Validation failed!!',
+        responseObject: error.messages,
+        statusCode: StatusCodes.UNPROCESSABLE_ENTITY,
+      })
+      return
+    }
+
+    if (
+      error instanceof authErrors.E_INVALID_CREDENTIALS ||
+      error instanceof authErrors.E_UNAUTHORIZED_ACCESS
+    ) {
+      return ctx.response.status(StatusCodes.UNAUTHORIZED).json({
+        success: false,
+        message: error.getResponseMessage(error, ctx),
+        responseObject: null,
+        statusCode: StatusCodes.UNAUTHORIZED,
+      })
+    }
+
     return super.handle(error, ctx)
   }
 
