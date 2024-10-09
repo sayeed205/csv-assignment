@@ -3,10 +3,17 @@ import * as csvUtils from '@fast-csv/parse'
 import { BaseJob } from 'adonis-resque'
 
 import Csv from '#models/csv'
+import Product from '#models/product'
 import logger from '@adonisjs/core/services/logger'
 
 export interface ProcessCsvArgs {
   id: string
+}
+
+export interface CSV {
+  'S. No.': string
+  'Product Name': string
+  'Input Image Urls': string
 }
 
 export default class ProcessCsv extends BaseJob {
@@ -15,9 +22,15 @@ export default class ProcessCsv extends BaseJob {
     const csvData = await drive.use().get(csv.file)
 
     csvUtils
-      .parseString(csvData, { headers: true })
+      .parseString<CSV, CSV>(csvData, { headers: true })
       .on('error', (error) => logger.error(error))
-      .on('data', (row) => console.log(row))
+      .on('data', async (row: CSV) => {
+        const product = await Product.create({
+          serialNumber: BigInt(row['S. No.']),
+          name: row['Product Name'],
+          importUrls: row['Input Image Urls'].split(','),
+        })
+      })
       .on('end', (rowCount: number) => logger.info(`Parsed ${rowCount} rows`))
   }
 }
