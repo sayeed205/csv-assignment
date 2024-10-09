@@ -1,0 +1,315 @@
+openapi: 3.1.0
+info:
+  title: csv-assignment
+  description: ''
+  version: 1.0.0
+tags:
+  - name: csv
+paths:
+  /csv/import:
+    post:
+      summary: Import csv
+      deprecated: false
+      description: ''
+      tags:
+        - csv
+      parameters: []
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  example:
+                    - file://D:\github\csv-assignment\dummy.csv
+                  type: string
+                  format: binary
+                webhookUrl:
+                  type:
+                    - string
+                    - 'null'
+                  format: uri
+                  description: url of the webhook
+              required:
+                - file
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  responseObject:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                      status:
+                        type: string
+                    required:
+                      - id
+                      - status
+                  statusCode:
+                    type: integer
+                required:
+                  - success
+                  - message
+                  - responseObject
+                  - statusCode
+              examples:
+                '1':
+                  summary: Success
+                  value:
+                    success: true
+                    message: CSV imported successfully
+                    responseObject:
+                      id: c750e549-7395-4d42-af9c-a89493598269
+                      status: pending
+                    statusCode: 201
+        '422':
+          description: Parameter Error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  responseObject:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        message:
+                          type: string
+                        rule:
+                          type: string
+                        field:
+                          type: string
+                  statusCode:
+                    type: integer
+                required:
+                  - success
+                  - message
+                  - responseObject
+                  - statusCode
+              examples:
+                '1':
+                  summary: Exception
+                  value:
+                    success: false
+                    message: Validation failed!!
+                    responseObject:
+                      - message: Invalid CSV format
+                        rule: csv
+                        field: file
+                    statusCode: 422
+                '2':
+                  summary: Exception
+                  value:
+                    success: false
+                    message: Validation failed!!
+                    responseObject:
+                      - message: Invalid CSV Column 'asdf' at index 2
+                        rule: csv
+                        field: file
+                    statusCode: 422
+      security: []
+  /csv/{id}/status:
+    get:
+      summary: CSV Status
+      deprecated: false
+      description: ''
+      tags:
+        - csv
+      parameters:
+        - name: id
+          in: path
+          description: ''
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  responseObject:
+                    type:
+                      - object
+                      - 'null'
+                    properties:
+                      id:
+                        type: string
+                      status:
+                        type: string
+                        enum:
+                          - pending
+                          - processing
+                          - completed
+                          - error
+                      report:
+                        type: object
+                        properties:
+                          message:
+                            type: string
+                          data:
+                            type: array
+                            items:
+                              type: object
+                              properties:
+                                productName:
+                                  type: string
+                                serialNumber:
+                                  type: string
+                                error:
+                                  type: string
+                              required:
+                                - productName
+                                - serialNumber
+                                - error
+                        required:
+                          - message
+                          - data
+                    required:
+                      - id
+                      - status
+                      - report
+                  statusCode:
+                    type: integer
+                required:
+                  - success
+                  - message
+                  - responseObject
+                  - statusCode
+              examples:
+                '1':
+                  summary: Success
+                  value:
+                    success: true
+                    message: CSV Status retrieved.
+                    responseObject:
+                      id: a9f0bd5d-029a-4343-b277-74385f794979
+                      status: error
+                      report:
+                        message: Error occurred while processing images
+                        data:
+                          - productName: Product 1
+                            serialNumber: '1'
+                            error: Invalid image url
+                          - productName: Product 2
+                            serialNumber: '2'
+                            error: URL not provided
+                    statusCode: 200
+        '404':
+          description: Record Not Found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  responseObject:
+                    type: 'null'
+                  statusCode:
+                    type: integer
+                required:
+                  - success
+                  - message
+                  - responseObject
+                  - statusCode
+              examples:
+                '1':
+                  summary: Exception
+                  value:
+                    success: false
+                    message: CSV not found!!
+                    responseObject: null
+                    statusCode: 404
+      security: []
+  /csv/{id}/output:
+    get:
+      summary: Get CSV Output
+      deprecated: false
+      description: ''
+      tags:
+        - csv
+      parameters:
+        - name: id
+          in: path
+          description: ''
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: It returns CSV.
+          content:
+            text/csv:
+              schema:
+                type: string
+              example: |-
+                Serial Number,Product Name,Input Image Urls,Output Image Urls
+                1,Product 1,"http://localhost:3333/uploads/products/images/p0h4e5n72ksd1.png,https://dummyimage.com/600x400/fff/000.jpg",",http://localhost:3333/uploads/products/images/wf9mpznj05lbfivnzr4vhvc6.jpg"
+                2,Product 2,",https://dummyimage.com/600x400/fff/ff0000.jpg",",http://localhost:3333/uploads/products/images/m359oy4rai3h0koldd8wkdsj.jpg"
+                3,Product 3,"https://dummyimage.com/600x400/00ff00/fff.jpg,https://dummyimage.com/600x400/fff/00ff00.jpg","http://localhost:3333/uploads/products/images/t56mtni3jdt0bn2irlu3i5wn.jpg,http://localhost:3333/uploads/products/images/c2r2ppntny5k3e0a7mqul17v.jpg"
+                4,Product 4,"https://dummyimage.com/600x400/0000ff/fff.jpg,https://dummyimage.com/600x400/fff/0000ff.jpg","http://localhost:3333/uploads/products/images/g45qcayzduel974z0v6fru07.jpg,http://localhost:3333/uploads/products/images/jo93edxe5huct508yt39vcvv.jpg"
+                5,Product 5,"https://dummyimage.com/600x400/ffff00/000.jpg,https://dummyimage.com/600x400/000/ffff00.jpg","http://localhost:3333/uploads/products/images/z1ye21bgsbtag9y7k50jbbur.jpg,http://localhost:3333/uploads/products/images/m7loyigf1wu747f3ky9zsyop.jpg"
+                6,Product 6,"https://dummyimage.com/600x400/00ffff/000.jpg,https://dummyimage.com/600x400/000/00ffff.jpg","http://localhost:3333/uploads/products/images/simfsp6lm2kzev7r1nxa07gk.jpg,http://localhost:3333/uploads/products/images/xsdok4tfrghi38ddn1076822.jpg"
+                7,Product 7,"https://dummyimage.com/600x400/ff00ff/000.jpg,https://dummyimage.com/600x400/000/ff00ff.jpg","http://localhost:3333/uploads/products/images/lgkhptkt3urdndtihxchvunq.jpg,http://localhost:3333/uploads/products/images/xun8qan1y5pf3nrtnian1wq3.jpg"
+                8,Product 8,"https://dummyimage.com/600x400/800000/fff.jpg,https://dummyimage.com/600x400/fff/800000.jpg","http://localhost:3333/uploads/products/images/hcjpue4qm5wirfuilkj5c11w.jpg,http://localhost:3333/uploads/products/images/av5e36uu651g6nfyzg46cqzk.jpg"
+                9,Product 9,"https://dummyimage.com/600x400/008000/fff.jpg,https://dummyimage.com/600x400/fff/008000.jpg","http://localhost:3333/uploads/products/images/qpcqav5zuubhrv63d1v8wqgp.jpg,http://localhost:3333/uploads/products/images/pmgz8pnmlb6lnkn372l6nkdo.jpg"
+                10,Product 10,"https://dummyimage.com/600x400/000080/fff.jpg,https://dummyimage.com/600x400/fff/000080.jpg","http://localhost:3333/uploads/products/images/rx4h4a7rpbupgx9yvn1caiew.jpg,http://localhost:3333/uploads/products/images/ug9wa075hh4q9hek70wihons.jpg"
+        '404':
+          description: Record Not Found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  responseObject:
+                    type: 'null'
+                  statusCode:
+                    type: integer
+                required:
+                  - success
+                  - message
+                  - responseObject
+                  - statusCode
+              examples:
+                '1':
+                  summary: Exception
+                  value:
+                    success: false
+                    message: CSV not found!!
+                    responseObject: null
+                    statusCode: 404
+      security: []
+components:
+  schemas: {}
+  securitySchemes: {}
+servers: []
