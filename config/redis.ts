@@ -20,7 +20,9 @@ const redisConfig = defineConfig({
       host: env.get('REDIS_HOST'),
       port: env.get('REDIS_PORT'),
       password: env.get('REDIS_PASSWORD', ''),
+      username: env.get('REDIS_USERNAME'),
       db: 0,
+      tls: {},
       keyPrefix: '',
       retryStrategy(times) {
         return times > 10 ? null : times * 50

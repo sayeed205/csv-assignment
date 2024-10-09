@@ -25,6 +25,13 @@ router
   })
   .prefix('/api/docs')
 
+router.get('/fs', () =>
+  router
+    .builder()
+    .params(['products', 'images', 'k4xwfhj924keiubf7beyjbic.jpg'])
+    .make('drive.fs.serve')
+)
+
 /*
 |--------------------------------------------------------------------------
 | csv routes

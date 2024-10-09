@@ -1,6 +1,7 @@
 import { cuid } from '@adonisjs/core/helpers'
 import drive from '@adonisjs/drive/services/main'
 import { BaseJob } from 'adonis-resque'
+import axios from 'axios'
 import { parse } from 'csv-parse/sync'
 import { DateTime } from 'luxon'
 import sharp from 'sharp'
@@ -51,10 +52,12 @@ export default class ProcessCsv extends BaseJob {
             continue
           }
           try {
-            const resCheck = await fetch(importImg, { method: 'HEAD' })
+            const resCheck = await axios.head(importImg)
 
-            if (resCheck.ok) {
-              const input = await fetch(importImg).then((res) => res.arrayBuffer())
+            if (resCheck.status === 200) {
+              const input = await axios
+                .get(importImg, { responseType: 'arraybuffer' })
+                .then((res) => res.data)
               const resizedImage = await sharp(input)
                 .metadata()
                 .then(({ width }) =>
@@ -63,7 +66,7 @@ export default class ProcessCsv extends BaseJob {
                     .toBuffer()
                 )
 
-              const fileKey = `products/images/${cuid()}.jpg`
+              const fileKey = `products/images/${cuid()}.jpeg`
               await drive.use().put(fileKey, resizedImage, {
                 contentType: 'image/jpeg',
               })
@@ -88,7 +91,7 @@ export default class ProcessCsv extends BaseJob {
             await csv.save()
             await product.related('images').create({
               inputUrl: importImg,
-              error: JSON.stringify(error),
+              error: JSON.stringify(error?.message || error?.messages),
             })
           }
         }

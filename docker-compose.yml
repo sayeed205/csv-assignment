@@ -1,0 +1,110 @@
+services:
+  csv_server:
+    env_file:
+      - .env.production
+    container_name: server
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      - NODE_ENV=production
+      - PORT=6969
+      - HOST=0.0.0.0
+      - DATABASE_URL=postgres://admin:password@postgres-csv:5432/csv
+      - REDIS_HOST=redis-csv
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=
+    command: /bin/sh -c "node ace migration:run --force && node bin/server.js"
+    volumes:
+      - app_data:/app
+    ports:
+      - '6969:6969'
+    restart: on-failure
+    networks:
+      - csv-network
+    depends_on:
+      - csv_redis
+      - csv_postgres
+
+  # csv_job:
+  #   env_file:
+  #     - .env.production
+  #   container_name: csv_job
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile
+  #   environment:
+  #     - NODE_ENV=production
+  #     - PORT=6969
+  #     - HOST=0.0.0.0
+  #     - DATABASE_URL=postgres://admin:password@postgres-csv:5432/csv
+  #     - REDIS_HOST=redis-csv
+  #     - REDIS_PORT=6379
+  #     - REDIS_PASSWORD=
+  #   command: npm run job
+  #   volumes:
+  #     - app_data:/app
+  #   restart: on-failure
+  #   networks:
+  #     - csv-network
+  #   depends_on:
+  #     - csv_redis
+  #     - csv_postgres
+
+  csv_postgres:
+    container_name: postgres-csv
+    image: postgres
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: csv
+      PGDATA: /var/lib/postgresql/data
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - csv-network
+    restart: unless-stopped
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U admin']
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  csv_redis:
+    container_name: redis-csv
+    image: redis:latest
+    volumes:
+      - redis_data:/data
+    networks:
+      - csv-network
+    restart: unless-stopped
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  csv_resque-web:
+    image: appwrite/resque-web
+    container_name: resque-web-prod
+    ports:
+      - '4567:5678'
+    environment:
+      - RESQUE_WEB_HOST=redis
+      - RESQUE_WEB_PORT=6379
+    depends_on:
+      - csv_redis
+    networks:
+      - csv-network
+    restart: unless-stopped
+
+volumes:
+  app_data:
+  postgres_data:
+  redis_data:
+  # csv_job_data:
+
+networks:
+  csv-network:
+    driver: bridge
+# docker compose up --build -d
