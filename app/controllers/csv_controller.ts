@@ -101,8 +101,6 @@ export default class CSVController {
       const inputImageUrls = product.images.map((im) => im.inputUrl).join(',')
       const outputImageUrls = product.images.map((im) => im.outputUrl?.toString()).join(',')
 
-      console.log(inputImageUrls, outputImageUrls, product.id, product.serialize().images)
-
       rows += `${serialNumber},${productName},"${inputImageUrls}","${outputImageUrls}"\n`
     }
 
