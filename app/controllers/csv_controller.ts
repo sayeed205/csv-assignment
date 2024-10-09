@@ -12,7 +12,7 @@ export default class CSVController {
   async import({ request, response }: HttpContext) {
     const { file, webhookUrl } = await request.validateUsing(csvValidator)
 
-    const fileKey = `uploads/csv/${cuid()}.${file.extname}`
+    const fileKey = `csv/${cuid()}.${file.extname}`
     await file.moveToDisk(fileKey)
     const fileUrl = await drive.use().getUrl(fileKey)
 

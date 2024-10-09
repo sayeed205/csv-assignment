@@ -10,6 +10,7 @@ export default class extends BaseSchema {
       table.text('name').notNullable()
       table.specificType('import_urls', 'TEXT[]').notNullable()
       table.specificType('output_urls', 'TEXT[]').nullable()
+      table.uuid('csv_id').references('csvs.id').onDelete('CASCADE').notNullable()
 
       table.timestamp('created_at').notNullable()
       table.timestamp('updated_at').notNullable()

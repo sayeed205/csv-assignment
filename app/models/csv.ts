@@ -1,9 +1,11 @@
-import { afterDelete, BaseModel, beforeCreate, column } from '@adonisjs/lucid/orm'
+import drive from '@adonisjs/drive/services/main'
+import { afterDelete, BaseModel, beforeCreate, column, hasMany } from '@adonisjs/lucid/orm'
+import type { HasMany } from '@adonisjs/lucid/types/relations'
 import { DateTime } from 'luxon'
 import { randomUUID } from 'node:crypto'
 
 import { CsvStatus } from '#enums/csv'
-import drive from '@adonisjs/drive/services/main'
+import Product from '#models/product'
 
 export default class Csv extends BaseModel {
   static selfAssignPrimaryKey = true
@@ -41,4 +43,7 @@ export default class Csv extends BaseModel {
   static async afterDeleteHook(csv: Csv) {
     await drive.use().delete(csv.file)
   }
+
+  @hasMany(() => Product)
+  declare products: HasMany<typeof Product>
 }
