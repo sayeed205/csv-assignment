@@ -94,6 +94,51 @@ To set up the CSV Assignment API locally, follow these steps:
   - **200 OK**: Returns the processed CSV file.
   - **404 Not Found**: CSV file not found.
 
+## Webhook Integration
+
+The CSV Assignment API supports webhook integration to notify external services when a CSV file has been processed. This feature is useful for automating workflows and integrating with other systems.
+
+### How It Works
+
+- When you import a CSV file using the **POST /csv/import** endpoint, you can optionally provide a `webhookUrl` in the request body.
+- Once the CSV processing is complete, the API will send a POST request to the specified `webhookUrl`.
+- The webhook payload includes the status of the CSV processing, the time it was processed, and any errors encountered.
+
+### Webhook Payload
+
+The POST request to the webhook URL will include the following JSON payload:
+
+```json
+{
+  "status": "completed",
+  "processedAt": "2023-10-01T12:00:00Z",
+  "error": null
+}
+```
+
+- **status**: The current status of the CSV processing (e.g.,"pending", "processing", "completed", "error").
+- **processedAt**: The timestamp when the CSV processing was completed.
+- **error**: Any error message encountered during processing, or `null` if there were no errors.
+
+### Configuring the Webhook
+
+To configure a webhook:
+
+1. When importing a CSV file, include the `webhookUrl` parameter in your request:
+
+   ```bash
+   curl -X POST 'http://localhost:3333/csv/import' \
+     -F 'file=@/path/to/your/file.csv' \
+     -F 'webhookUrl=https://your-webhook-url.com'
+   ```
+
+2. Ensure that the specified `webhookUrl` is accessible and can handle POST requests with JSON payloads.
+
+### Error Handling
+
+- If the webhook invocation fails, the error will be logged, but it will not affect the processing of the CSV file.
+- Ensure your webhook endpoint is reliable and can handle potential retries or failures.
+
 ## Example Usage
 
 ### Import CSV

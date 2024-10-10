@@ -19,8 +19,11 @@ export default class CSVController {
     const csv = await Csv.create({
       file: fileUrl,
       status: CsvStatus.PENDING,
-      webhookUrl: webhookUrl,
     })
+
+    if (webhookUrl) {
+      await csv.related('webhook').create({ url: webhookUrl })
+    }
 
     await ProcessCsv.enqueue({ id: csv.id })
 
@@ -37,7 +40,7 @@ export default class CSVController {
     })
   }
 
-  async show({ params, response }: HttpContext) {
+  async status({ params, response }: HttpContext) {
     const csv = await Csv.find(params.id)
     if (!csv) {
       return response.notFound({
@@ -71,6 +74,7 @@ export default class CSVController {
       responseObject: {
         id: csv.id,
         status: csv.status,
+        processedAt: csv.processedAt,
         report: {
           message: csv.error || '',
           data: errors,

@@ -8,6 +8,7 @@ import sharp from 'sharp'
 
 import { CsvStatus } from '#enums/csv'
 import Csv from '#models/csv'
+import logger from '@adonisjs/core/services/logger'
 
 export interface ProcessCsvArgs {
   id: string
@@ -85,13 +86,14 @@ export default class ProcessCsv extends BaseJob {
               })
             }
           } catch (error) {
-            console.error(`Error processing image ${importImg}:`, error)
+            const err = error.response || error.errors ? error.errors.map(JSON.stringify) : error
+            logger.error(`error processing image: ${importImg}, error: ${err}`)
             csv.status = CsvStatus.ERROR
             csv.error = 'Error occurred while processing images'
             await csv.save()
             await product.related('images').create({
               inputUrl: importImg,
-              error: JSON.stringify(error?.message || error?.messages),
+              error: JSON.stringify(err),
             })
           }
         }
@@ -102,6 +104,25 @@ export default class ProcessCsv extends BaseJob {
         await csv.save()
       }
     }
+
+    const webhook = await csv.related('webhook').query().first()
+    if (webhook) {
+      try {
+        await axios.post(webhook.url, {
+          status: csv.status,
+          processedAt: csv.processedAt,
+          error: csv.error,
+        })
+        webhook.processedAt = DateTime.now()
+        logger.info(`Webhook processed ${webhook.url}`)
+      } catch (error) {
+        const err = error.response || error.errors ? error.errors.map(JSON.stringify) : error
+        logger.error(`error while invoking webhook for url: ${webhook.url},error: ${err}`)
+        webhook.error = `${err}`
+      }
+      await webhook.save()
+    }
+
     csv.processedAt = DateTime.now()
 
     await csv.save()

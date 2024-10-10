@@ -1,11 +1,12 @@
 import drive from '@adonisjs/drive/services/main'
-import { afterDelete, BaseModel, beforeCreate, column, hasMany } from '@adonisjs/lucid/orm'
-import type { HasMany } from '@adonisjs/lucid/types/relations'
+import { afterDelete, BaseModel, beforeCreate, column, hasMany, hasOne } from '@adonisjs/lucid/orm'
+import type { HasMany, HasOne } from '@adonisjs/lucid/types/relations'
 import { DateTime } from 'luxon'
 import { randomUUID } from 'node:crypto'
 
 import { CsvStatus } from '#enums/csv'
 import Product from '#models/product'
+import Webhook from '#models/webhook'
 
 export default class Csv extends BaseModel {
   static selfAssignPrimaryKey = true
@@ -18,9 +19,6 @@ export default class Csv extends BaseModel {
 
   @column()
   declare status: CsvStatus
-
-  @column()
-  declare webhookUrl: string | null
 
   @column()
   declare error: string | null
@@ -41,9 +39,12 @@ export default class Csv extends BaseModel {
 
   @afterDelete()
   static async afterDeleteHook(csv: Csv) {
-    await drive.use().delete(csv.file)
+    await drive.use().delete(new URL(csv.file).pathname.replace(/^\/uploads/, ''))
   }
 
   @hasMany(() => Product)
   declare products: HasMany<typeof Product>
+
+  @hasOne(() => Webhook)
+  declare webhook: HasOne<typeof Webhook>
 }

@@ -38,5 +38,5 @@ router.get('/fs', () =>
 |--------------------------------------------------------------------------
 */
 router.post('/csv/import', [CSVController, 'import'])
-router.get('/csv/:id/status', [CSVController, 'show'])
+router.get('/csv/:id/status', [CSVController, 'status'])
 router.get('/csv/:id/output', [CSVController, 'output'])
